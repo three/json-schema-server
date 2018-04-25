@@ -6,7 +6,7 @@ import java.nio.file.Files
 import com.sun.net.httpserver.{HttpExchange, HttpHandler, HttpServer}
 import scala.io.Source
 import org.json4s.{JObject, JValue, JString}
-import org.json4s.native.JsonMethods
+import org.json4s.jackson.JsonMethods
 
 object Server {
   def start(port : Int, templateStore : TemplateStore) {
@@ -83,11 +83,23 @@ class RequestHandler(templateStore : TemplateStore) extends HttpHandler {
   }
 
   def handleValidateSchema(req : HttpExchange, schemaId : String) {
-    sendJsonResponse(req, 400, JObject(List(
-      ("action",  JString("validateSchema")),
-      ("id",  JString(schemaId)),
-      ("status",  JString("fail"))
-    )))
+    val json = Source.fromInputStream(req.getRequestBody()).mkString
+
+    ( templateStore.validateSchema(schemaId, json) ) match {
+      case Some(failureString) =>
+        sendJsonResponse(req, 200, JObject(List(
+          ("action",  JString("validateSchema")),
+          ("id",      JString(schemaId)),
+          ("status",  JString("fail")),
+          ("message", JString(failureString))
+        )))
+      case None =>
+        sendJsonResponse(req, 200, JObject(List(
+          ("action", JString("validateSchema")),
+          ("id",     JString(schemaId)),
+          ("status", JString("success"))
+        )))
+    }
   }
 
   private def sendJsonResponse(req : HttpExchange, status : Int, json : JValue) {

@@ -7,7 +7,7 @@ import scala.io.Source
 import java.io.FileNotFoundException
 import org.json4s.JNothing
 import org.json4s.ParserUtil
-import org.json4s.native.JsonMethods
+import org.json4s.jackson.JsonMethods
 
 class TemplateStore(baseDirectory : String) {
   def isValidSchemaId(schemaId : String) = {
@@ -51,6 +51,11 @@ class TemplateStore(baseDirectory : String) {
     }
 
     Files.write(schemaPath, schema.getBytes)
+  }
+
+  def validateSchema(schemaId : String, json : String) : Option[String] = {
+    val schema = getTemplateSource(schemaId).get.mkString
+    Validator.validateJson(schema, json)
   }
 
   private def concatPath(p1 : String, p2 : String) = p1 + "/" + p2

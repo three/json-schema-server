@@ -5,7 +5,7 @@ import scala.io.Source
 import java.io.FileNotFoundException
 import java.io.{InputStream, OutputStream}
 import org.json4s.{JString, JInt}
-import org.json4s.native.JsonMethods
+import org.json4s.jackson.JsonMethods
 
 object JsonValidator {
   def main(args: Array[String]) {
