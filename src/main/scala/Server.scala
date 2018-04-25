@@ -1,8 +1,10 @@
 package jsonvalidator
 
-import java.io.{InputStream, OutputStream}
+import java.io.{InputStream, OutputStream, File}
 import java.net.InetSocketAddress
+import java.nio.file.Files
 import com.sun.net.httpserver.{HttpExchange, HttpHandler, HttpServer}
+import scala.io.Source
 import org.json4s.{JObject, JValue, JString}
 import org.json4s.native.JsonMethods
 
@@ -20,6 +22,8 @@ class RequestHandler(templateStore : TemplateStore) extends HttpHandler {
   def handle(req : HttpExchange) {
     val method = req.getRequestMethod
     val path   = req.getRequestURI.getPath
+
+    println(method + " " + path)
 
     val pathFormat = """/([a-z]{1,})/([A-Za-z0-9]{1,})""".r
     (method, path) match {
@@ -52,11 +56,30 @@ class RequestHandler(templateStore : TemplateStore) extends HttpHandler {
   }
 
   def handlePostSchema(req : HttpExchange, schemaId : String) {
-    sendJsonResponse(req, 400, JObject(List(
-      ("action",  JString("uploadSchema")),
-      ("id",  JString(schemaId)),
-      ("status",  JString("fail"))
-    )))
+    val schema = Source.fromInputStream(req.getRequestBody()).mkString
+
+    if ( templateStore.schemaExists(schemaId) ) {
+      sendJsonResponse(req, 409, JObject(List(
+        ("action",  JString("uploadSchema")),
+        ("id",      JString(schemaId)),
+        ("status",  JString("fail")),
+        ("message", JString("Schema already exists"))
+      )))
+    } else if ( !templateStore.isSchemaValid(schema) ) {
+      sendJsonResponse(req, 400, JObject(List(
+        ("action",  JString("uploadSchema")),
+        ("id",      JString(schemaId)),
+        ("status",  JString("error")),
+        ("message", JString("Invalid JSON"))
+      )))
+    } else {
+      sendJsonResponse(req, 400, JObject(List(
+        ("action",  JString("uploadSchema")),
+        ("id",      JString(schemaId)),
+        ("status",  JString("success"))
+      )))
+      templateStore.storeSchema(schemaId, schema)
+    }
   }
 
   def handleValidateSchema(req : HttpExchange, schemaId : String) {
