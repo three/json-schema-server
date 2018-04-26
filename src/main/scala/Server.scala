@@ -18,6 +18,9 @@ object Server {
   }
 }
 
+/**
+ * Handles all requests made to the server
+ */
 class RequestHandler(templateStore : TemplateStore) extends HttpHandler {
   def handle(req : HttpExchange) {
     val method = req.getRequestMethod
@@ -25,11 +28,15 @@ class RequestHandler(templateStore : TemplateStore) extends HttpHandler {
 
     println(method + " " + path)
 
+    // Will match URLs of the form /abc/def
     val pathFormat = """/([a-z]{1,})/([A-Za-z0-9_-]{1,})""".r
     (method, path) match {
-      case ("GET",  pathFormat("schema",   schemaId)) => handleGetSchema(req, schemaId)
-      case ("POST", pathFormat("schema",   schemaId)) => handlePostSchema(req, schemaId)
-      case ("POST", pathFormat("validate", schemaId)) => handleValidateSchema(req, schemaId)
+      case ("GET",  pathFormat("schema",   schemaId)) =>
+        handleGetSchema(req, schemaId)
+      case ("POST", pathFormat("schema",   schemaId)) =>
+        handlePostSchema(req, schemaId)
+      case ("POST", pathFormat("validate", schemaId)) =>
+        handleValidateDocument(req, schemaId)
       case default =>
         sendJsonResponse(req, 400, JObject(List(
           ("action",  JString("invalid")),
@@ -42,7 +49,7 @@ class RequestHandler(templateStore : TemplateStore) extends HttpHandler {
   }
 
   def handleGetSchema(req : HttpExchange, schemaId : String) {
-    templateStore.getTemplateSource(schemaId) match {
+    templateStore.getSchemaSource(schemaId) match {
       case Some(schemaSource) =>
         sendStringResponse(req, 200, schemaSource.mkString)
       case None =>
@@ -58,6 +65,9 @@ class RequestHandler(templateStore : TemplateStore) extends HttpHandler {
   def handlePostSchema(req : HttpExchange, schemaId : String) {
     val schema = Source.fromInputStream(req.getRequestBody()).mkString
 
+    // If requests are handled in concurrently, this may result in a race
+    // condition if two schemas of the same name are uploaded at the same
+    // time.
     if ( templateStore.schemaExists(schemaId) ) {
       sendJsonResponse(req, 409, JObject(List(
         ("action",  JString("uploadSchema")),
@@ -82,7 +92,7 @@ class RequestHandler(templateStore : TemplateStore) extends HttpHandler {
     }
   }
 
-  def handleValidateSchema(req : HttpExchange, schemaId : String) {
+  def handleValidateDocument(req : HttpExchange, schemaId : String) {
     val json = Source.fromInputStream(req.getRequestBody()).mkString
 
     ( templateStore.validateSchema(schemaId, json) ) match {

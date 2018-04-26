@@ -9,6 +9,10 @@ import com.github.fge.jsonschema.core.report.ProcessingReport
 import com.github.fge.jsonschema.main.JsonSchemaFactory
 
 object Validator {
+  /**
+   * Parses schema and json, cleans json and tests against schema. Give None
+   * if success, Some(message) if anything fails
+   */
   def validateJson(schema : String, json : String) : Option[String] = {
     try {
       val mapper = new ObjectMapper()
@@ -26,7 +30,7 @@ object Validator {
         validated = false
         message += e.toString() + "\n"
       })
-      
+
       if ( validated ) {
         None
       } else {
@@ -36,7 +40,7 @@ object Validator {
       case e : JsonParseException => Some("Unable to parse JSON: " + e.toString())
     }
   }
-  
+
   def isValidJson(json : String) : Boolean = {
     val mapper = new ObjectMapper()
     try {
@@ -46,6 +50,9 @@ object Validator {
     }
   }
 
+  /**
+   * Removes all NULL fields from properties and all NULL values from arrays
+   */
   def cleanJson(json : JsonNode) : JsonNode = {
     if ( json.getNodeType == JsonNodeType.OBJECT ) {
       var node =  JsonNodeFactory.instance.objectNode()

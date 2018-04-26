@@ -31,25 +31,17 @@ object JsonValidator {
     println(" Port: "+config.port)
 
     val templateStore = new TemplateStore(config.storagePath)
-
     Server.start(config.port, templateStore)
   }
 
+  /**
+   * Read JSON-formatted configuration from Source
+   */
   def readConfig(source : Source) : Option[Config] = {
     val json = JsonMethods.parse(source.mkString)
 
-    val maybePath = (json \ "storagePath") match {
-      case JString(str) => Some(str)
-      case default => None
-    }
-
-    val maybePort = (json \ "port") match {
-      case JInt(n) => Some(n)
-      case default => None
-    }
-
-    (maybePath, maybePort) match {
-      case (Some(path), Some(port)) => Some(Config(path, port.toInt))
+    (json \ "storagePath", json \ "port") match {
+      case (JString(path), JInt(port)) => Some(Config(path, port.toInt))
       case default => None
     }
   }

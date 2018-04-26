@@ -9,14 +9,23 @@ import org.json4s.JNothing
 import org.json4s.ParserUtil
 import org.json4s.jackson.JsonMethods
 
+/**
+ * Manages schemas stored in baseDirectory
+ */
 class TemplateStore(baseDirectory : String) {
   def isValidSchemaId(schemaId : String) = {
     val regex = """^[A-Za-z0-9_-]{1,}$""".r
     !regex.findFirstIn(schemaId).isEmpty
   }
 
+  /**
+   * Given a valid schemaId, returns Some(path) where path is where the schema
+   * would be stored if it existed. An invalid schema will return None.
+   */
   def templatePathFromId(schemaId : String) : Option[String] = {
     if ( isValidSchemaId(schemaId) ) {
+      // Because all valid schemas (matching the regex in isValidSchema) are
+      // valid filenames, no further processing is necessary.
       new Some( concatPath(baseDirectory, schemaId + ".json") )
     } else {
       None
@@ -30,10 +39,13 @@ class TemplateStore(baseDirectory : String) {
     }
   }
 
-  def getTemplateSource(schemaId : String) : Option[Source] = {
+  def getSchemaSource(schemaId : String) : Option[Source] = {
     templatePathFromId(schemaId).flatMap(sourceFromFileIfExists)
   }
 
+  /**
+   * Attempts to store schema, throws an error if invalid or exists
+   */
   def storeSchema(schemaId : String, schema : String) {
     val schemaPath = try {
       Paths.get( templatePathFromId(schemaId).get )
@@ -45,8 +57,13 @@ class TemplateStore(baseDirectory : String) {
     Files.write(schemaPath, schema.getBytes)
   }
 
+  /**
+   * Given valid schemaid, returns None if json validates against corresponding
+   * schema, and Some(message) if doesn't parse, doesn't validate or schema
+   * doesn't exist.
+   */
   def validateSchema(schemaId : String, json : String) : Option[String] = {
-    getTemplateSource(schemaId) match {
+    getSchemaSource(schemaId) match {
       case Some(schemaSource) =>
         Validator.validateJson(schemaSource.mkString, json)
       case None =>
@@ -54,6 +71,8 @@ class TemplateStore(baseDirectory : String) {
     }
   }
 
+  // Assumes paths are valid and correctly formatted. A better solution would
+  // be to use Java Paths instead
   private def concatPath(p1 : String, p2 : String) = p1 + "/" + p2
 
   private def sourceFromFileIfExists(fname: String) : Option[Source] = {
