@@ -16,7 +16,7 @@ JSON Validation Service uses [sbt][1] to build and test. Before running, a
 config file containing the port number and directory to store schemas must
 be setup.
 
-[1] https://www.scala-sbt.org/
+[1]: https://www.scala-sbt.org/
 
 ```
 $ cp config.example.json config.json
@@ -27,7 +27,7 @@ $ sbt run
 This will automatically download dependencies, build and run with default
 options. The default config will put schemas in the `schemas` directory
 in the current directory (**which must exist, otherwise schemas will not
-properly be stored**) and run on port `8080`.
+properly be stored**) and run on port `8000`.
 
 ## Usage
 
