@@ -4,7 +4,7 @@ Json-Validator is a RESTful server to save JSON schemas and test JSON documents
 against those schemas. This uses [json-schema-validator][3] to validate schemas
 and generate error messages for invalid documents.
 
-[3] https://github.com/java-json-tools/json-schema-validator
+[3]: https://github.com/java-json-tools/json-schema-validator
 
 This was created for the [Snowplow Internship Task][0].
 
