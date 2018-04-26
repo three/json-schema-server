@@ -1,5 +1,5 @@
 schemas
-config.example.json
+config.json
 
 dist/*
 target/
