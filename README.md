@@ -77,3 +77,7 @@ error: object has missing required properties (["destination","source"])
 Other requests will be handled according to the spec, and appropriate HTTP
 status codes will be returned will be returned with valid JSON if something
 fails. All schema IDs must match the regex `^[A-Za-z0-9_-]{1,}$`.
+
+## Testing
+
+Tests can be run with `sbt test`, but there aren't very many.
