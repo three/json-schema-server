@@ -11,7 +11,7 @@ import com.github.fge.jsonschema.main.JsonSchemaFactory
 object Validator {
   def validateJson(schema : String, json : String) : Option[String] = {
     try {
-      val mapper = new ObjectMapper();
+      val mapper = new ObjectMapper()
       val parsedSchema : JsonNode = mapper.readTree(schema)
       val parsedJson : JsonNode = mapper.readTree(json)
       val cleanedJson = cleanJson(parsedJson)
@@ -34,6 +34,15 @@ object Validator {
       }
     } catch {
       case e : JsonParseException => Some("Unable to parse JSON: " + e.toString())
+    }
+  }
+  
+  def isValidJson(json : String) : Boolean = {
+    val mapper = new ObjectMapper()
+    try {
+      mapper.readTree(json).getNodeType != JsonNodeType.MISSING
+    } catch {
+      case e : JsonParseException => false
     }
   }
 

@@ -25,7 +25,7 @@ class RequestHandler(templateStore : TemplateStore) extends HttpHandler {
 
     println(method + " " + path)
 
-    val pathFormat = """/([a-z]{1,})/([A-Za-z0-9]{1,})""".r
+    val pathFormat = """/([a-z]{1,})/([A-Za-z0-9_-]{1,})""".r
     (method, path) match {
       case ("GET",  pathFormat("schema",   schemaId)) => handleGetSchema(req, schemaId)
       case ("POST", pathFormat("schema",   schemaId)) => handlePostSchema(req, schemaId)
@@ -48,8 +48,8 @@ class RequestHandler(templateStore : TemplateStore) extends HttpHandler {
       case None =>
         sendJsonResponse(req, 404, JObject(List(
           ("action",  JString("getSchema")),
-          ("id",  JString(schemaId)),
-          ("status",  JString("fail")),
+          ("id",      JString(schemaId)),
+          ("status",  JString("error")),
           ("message", JString("Schema Not Found"))
         )))
     }
@@ -62,10 +62,10 @@ class RequestHandler(templateStore : TemplateStore) extends HttpHandler {
       sendJsonResponse(req, 409, JObject(List(
         ("action",  JString("uploadSchema")),
         ("id",      JString(schemaId)),
-        ("status",  JString("fail")),
+        ("status",  JString("error")),
         ("message", JString("Schema already exists"))
       )))
-    } else if ( !templateStore.isSchemaValid(schema) ) {
+    } else if ( !Validator.isValidJson(schema) ) {
       sendJsonResponse(req, 400, JObject(List(
         ("action",  JString("uploadSchema")),
         ("id",      JString(schemaId)),
@@ -88,14 +88,14 @@ class RequestHandler(templateStore : TemplateStore) extends HttpHandler {
     ( templateStore.validateSchema(schemaId, json) ) match {
       case Some(failureString) =>
         sendJsonResponse(req, 200, JObject(List(
-          ("action",  JString("validateSchema")),
+          ("action",  JString("validateDocument")),
           ("id",      JString(schemaId)),
-          ("status",  JString("fail")),
+          ("status",  JString("error")),
           ("message", JString(failureString))
         )))
       case None =>
         sendJsonResponse(req, 200, JObject(List(
-          ("action", JString("validateSchema")),
+          ("action", JString("validateDocument")),
           ("id",     JString(schemaId)),
           ("status", JString("success"))
         )))

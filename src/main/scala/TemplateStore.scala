@@ -30,14 +30,6 @@ class TemplateStore(baseDirectory : String) {
     }
   }
 
-  def isSchemaValid(schema : String) : Boolean = {
-    try {
-      JsonMethods.parse(schema) != JNothing
-    } catch {
-      case e : ParserUtil.ParseException => false
-    }
-  }
-
   def getTemplateSource(schemaId : String) : Option[Source] = {
     templatePathFromId(schemaId).flatMap(sourceFromFileIfExists)
   }
@@ -54,8 +46,12 @@ class TemplateStore(baseDirectory : String) {
   }
 
   def validateSchema(schemaId : String, json : String) : Option[String] = {
-    val schema = getTemplateSource(schemaId).get.mkString
-    Validator.validateJson(schema, json)
+    getTemplateSource(schemaId) match {
+      case Some(schemaSource) =>
+        Validator.validateJson(schemaSource.mkString, json)
+      case None =>
+        Some("Schema Not Found")
+    }
   }
 
   private def concatPath(p1 : String, p2 : String) = p1 + "/" + p2
