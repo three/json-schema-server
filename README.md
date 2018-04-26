@@ -81,3 +81,24 @@ fails. All schema IDs must match the regex `^[A-Za-z0-9_-]{1,}$`.
 ## Testing
 
 Tests can be run with `sbt test`, but there aren't very many.
+
+
+## Known Issues
+
+The following warning is produced by sbt when dependencies are downloaded:
+
+```
+[warn] Found version conflict(s) in library dependencies; some are suspected to be binary incompatible:
+[warn]
+[warn]  * com.google.code.findbugs:jsr305:3.0.1 is selected over 2.0.1                                 
+[warn]      +- com.github.java-json-tools:json-schema-validator:2.2.8 (depends on 3.0.1)               
+[warn]      +- com.github.fge:btf:1.2                             (depends on 2.0.1)                   
+[warn]      +- com.github.fge:uri-template:0.9                    (depends on 2.0.1)
+[warn]      +- com.github.java-json-tools:json-schema-core:1.2.8  (depends on 2.0.1)
+[warn]      +- com.github.fge:msg-simple:1.1                      (depends on 2.0.1)
+[warn]      +- com.github.fge:jackson-coreutils:1.8               (depends on 2.0.1)
+[warn] Run 'evicted' to see detailed eviction warnings                                                              
+```
+
+This hasn't realized itself as an issue while running, and likely isn't causing any
+problems, but should probably be resolved anyway.
